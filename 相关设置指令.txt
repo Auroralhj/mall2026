@@ -1,0 +1,21 @@
+禁止运行脚本解决方案
+set-ExecutionPolicy RemoteSigned
+设置淘宝镜像
+npm config set registry http://registry.npm.taobao.org
+设置国内镜像
+npm config set registry https://registry.npmmirror.com
+设置浙江大学开源镜像
+npm config set registry https://mirrors.zju.edu.cn/npm/
+
+elementui网址
+element-plus.org
+
+复制项目的git命令
+git clone https://gitee.com/chg2024/mall2026.git
+
+安装库
+npm install 或者 npm i
+
+修改MySQL 8.0的密码验证方式
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';
+FLUSH PRIVILEGES;
