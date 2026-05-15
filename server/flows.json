@@ -1,0 +1,76 @@
+[
+    {
+        "id": "a0cf1996dea32086",
+        "type": "tab",
+        "label": "流程 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "69606c2aa0116abf",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/pics",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 280,
+        "y": 160,
+        "wires": [
+            [
+                "13f288eb8a8cd97f"
+            ]
+        ]
+    },
+    {
+        "id": "13f288eb8a8cd97f",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "返回首页轮播图URL数组",
+        "func": "msg.payload = [\n    'http://127.0.0.1:3000/public/images/pic1.png',\n    'http://127.0.0.1:3000/public/images/pic2.png',\n    'http://127.0.0.1:3000/public/images/pic3.png',\n    'http://127.0.0.1:3000/public/images/pic4.png',\n    'http://127.0.0.1:3000/public/images/pic5.png',\n]\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 160,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "303d55c5d08be33d",
+        "type": "http response",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 950,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "27ea0ce413058983",
+        "type": "debug",
+        "z": "a0cf1996dea32086",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 160,
+        "wires": []
+    }
+]
