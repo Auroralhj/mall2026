@@ -30,7 +30,7 @@
         "type": "function",
         "z": "a0cf1996dea32086",
         "name": "返回首页轮播图URL数组",
-        "func": "msg.payload = [\n    'http://127.0.0.1:3000/public/images/pic1.png',\n    'http://127.0.0.1:3000/public/images/pic2.png',\n    'http://127.0.0.1:3000/public/images/pic3.png',\n    'http://127.0.0.1:3000/public/images/pic4.png',\n    //'http://127.0.0.1:3000/public/images/pic5.png',\n]\nreturn msg;",
+        "func": "msg.payload = [\n    'http://127.0.0.1:3000/public/images/pic1.png',\n    'http://127.0.0.1:3000/public/images/pic2.png',\n    'http://127.0.0.1:3000/public/images/pic3.png',\n    'http://127.0.0.1:3000/public/images/pic4.png',\n    'http://127.0.0.1:3000/public/images/pic5.png',\n]\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -72,5 +72,122 @@
         "x": 960,
         "y": 160,
         "wires": []
+    },
+    {
+        "id": "eb13e1ad1d1bacc5",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/user/login",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 300,
+        "y": 260,
+        "wires": [
+            [
+                "8f7f5c5bfe392d67"
+            ]
+        ]
+    },
+    {
+        "id": "8f7f5c5bfe392d67",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "处理用户登录",
+        "func": "const db = global.get('mysql');\nlet username = msg.req.body.username\nlet password = msg.req.body.password\nif (username && password) {\n    await db.sql(\"select * from user where username = ?\", username)\n    .then(res => {\n        if (res.length == 0)\n            msg.payload = { code: 400, message: \"用户名不存在!\" };\n        else if (res[0].password != password)\n            msg.payload = { code: 400, message: \"密码错误!\" };\n        else {\n            msg.payload = { code: 200, message: \"登录成功!\" };\n        }\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err };\n    })\n} else\n    msg.payload = { code: 500, message: \"登录信息不完整!\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 260,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "893adf9bde7cbb2a",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/user/register",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 310,
+        "y": 360,
+        "wires": [
+            [
+                "8492faeda70c3604"
+            ]
+        ]
+    },
+    {
+        "id": "8492faeda70c3604",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "用户注册功能",
+        "func": "let username = msg.payload.username\nlet password = msg.payload.password\nlet email = msg.payload.email\nlet avatar = msg.payload.avatar\nmsg.payload = \"注册用户名：\"+username+\",email：\"+email+\",avatar:\"+avatar\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 360,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "8442847668ce9f4f",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/user/profile",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 300,
+        "y": 460,
+        "wires": [
+            [
+                "f0b086a8e8bfd216"
+            ]
+        ]
+    },
+    {
+        "id": "f0b086a8e8bfd216",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "返回登录用户信息",
+        "func": "msg.payload = \"返回登录用户信息\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 460,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
     }
 ]

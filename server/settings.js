@@ -1,3 +1,5 @@
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
 /**
  * This is the default settings file provided by Node-RED.
  *
@@ -247,6 +249,22 @@ module.exports = {
     httpStatic: [
         {path: __dirname + '/public/', root: '/public/'}
     ],
+
+    httpNodeMiddleware: [
+        cookieParser('node-red-session-secret'),
+        session({
+            secret: 'your-node-red-4.1.6-secret',
+            resave: false,
+            saveUninitialized: false,
+            cookie: {
+                maxAge: 3600 * 1000,
+                httpOnly: true,
+                secure: false
+            },
+            store: new session.MemoryStore()
+        })
+    ], 
+    
     /**
      * All static routes will be appended to httpStaticRoot
      * e.g. if httpStatic = "/home/nol/docs" and  httpStaticRoot = "/static/"
@@ -544,6 +562,7 @@ module.exports = {
      */
     functionGlobalContext: {
         // os:require('os'),
+        mysql : require('./mysql.js'),
     },
 
     /** The maximum number of messages nodes will buffer internally as part of their

@@ -2,6 +2,84 @@
 import icon1 from './assets/icon1.png'
 import icon2 from './assets/icon2.png'
 import icon3 from './assets/icon3.png'
+import {ref, reactive} from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+
+const formLabelWidth = ref("90px");
+const loginFormVisible = ref(false);
+const loginform = reactive({
+        name: "",
+        password: "",
+    });
+const loginformRef = ref(null);
+const loginrules = reactive({
+        name: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+          {
+            min: 3,
+            max: 10,
+            message: "长度在 3 到 10 个字符",
+            trigger: "blur",
+          },
+        ],
+        password: [
+          { required: true, message: "请输入密码", trigger: "change" },
+          { min: 3, message: "密码长度不少于3个字符", trigger: "change" },
+        ],
+      });
+
+const doLogin = () => {
+    loginformRef.value.validate((valid) => {
+        if (valid) {
+          console.log("提交数据到服务端");
+          axios
+            .post("/api/user/login", {
+              username: loginform.name,
+              password: loginform.password,
+            })
+            .then((res) => {
+              console.log(res);
+              if (res.data.code == 200){
+                ElMessage({
+                showClose: true,
+                message: '登录成功！',
+                type: 'success'
+                });
+                loadUser();
+                loginFormVisible.value = false;
+              }else{
+                ElMessage({
+                showClose: true,
+                message: res.data.message,
+                type: 'error'
+                });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        } else {
+          ElMessage.error("登录数据填写有误！");
+          return false;
+        }
+      });
+    }
+const user =  ref({});
+
+const loadUser = () => {
+    axios
+      .get("/api/user/profile")
+      .then((res) => {
+        user.value = res.data;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+loadUser();
+
 </script>
 <template>
 <header class="tan-site-header">
@@ -10,10 +88,14 @@ import icon3 from './assets/icon3.png'
         <div>
           <a>MoreMall商城</a>
         </div>
-        <div>
-          <span>登录</span>
-          <span>注册</span>
+        <div v-if="user.username" >
+                <img :src="user.avatar" style="width: 16px;height 16px;" />
+                <span>{{ user.username }}</span>
         </div>
+          <div v-else>
+            <span @click="loginFormVisible = true">登录</span>
+            <span @click="regFormVisible = true">注册</span>
+          </div>
       </div>
     </div>
  </header>
@@ -48,6 +130,34 @@ import icon3 from './assets/icon3.png'
         <p>XX公司版权所有 © 1996-2026 经营许可证：XXXXXXXXXXXXXXXXX</p>
     </div>
 </footer>
+<el-dialog title="登录" v-model="loginFormVisible">
+    <el-form
+    :model="loginform"
+    ref="loginformRef"
+    :rules="loginrules"
+    :label-width="formLabelWidth"
+    >
+    <el-form-item label="用户名：" prop="name">
+        <el-input
+        v-model="loginform.name"
+        placeholder="请输入用户名"
+        prefix-icon="key"
+        ></el-input>
+    </el-form-item>
+    <el-form-item label="密码：" prop="password">
+        <el-input
+        v-model="loginform.password"
+        placeholder="请输入密码"
+        prefix-icon="unlock"
+        show-password
+        ></el-input>
+    </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+    <el-button @click="loginFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="doLogin">登 录</el-button>
+    </div>
+</el-dialog>
 </template>
 <style scoped>
 .tan-site-header {
