@@ -2,7 +2,15 @@
     {
         "id": "a0cf1996dea32086",
         "type": "tab",
-        "label": "流程 1",
+        "label": "首页和用户信息",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "da813bbfd577c796",
+        "type": "tab",
+        "label": "商品信息",
         "disabled": false,
         "info": "",
         "env": []
@@ -135,7 +143,7 @@
         "type": "function",
         "z": "a0cf1996dea32086",
         "name": "用户注册功能",
-        "func": "let username = msg.payload.username\nlet password = msg.payload.password\nlet email = msg.payload.email\nlet avatar = msg.payload.avatar\nmsg.payload = \"注册用户名：\"+username+\",email：\"+email+\",avatar:\"+avatar\nreturn msg;",
+        "func": "let username = msg.req.body.username\nlet password = msg.req.body.password\nlet email = msg.req.body.email\nlet avatar = msg.req.body.avatar\n//msg.payload = \"注册用户名：\"+username+\",email：\"+email+\",avatar:\"+avatar);\nconst db = global.get('mysql');\nawait db.sql(\"insert into user(username,password,email,avatar) values (?,?,?,?) \", username, password, email, avatar)\n    .then(res => {\n        console.log(res);\n        msg.payload = { code: 200, message:\"注册成功！\"};\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err };\n    })\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -226,6 +234,93 @@
             [
                 "303d55c5d08be33d",
                 "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "a7734af99a4238d3",
+        "type": "http in",
+        "z": "da813bbfd577c796",
+        "name": "",
+        "url": "/category/list",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "5d2bf1cde49ed7ea"
+            ]
+        ]
+    },
+    {
+        "id": "5d2bf1cde49ed7ea",
+        "type": "function",
+        "z": "da813bbfd577c796",
+        "name": "获取商品分类信息",
+        "func": "const db = global.get('mysql');\nawait db.sql(\"SELECT * FROM product_category\")\n    .then(res => {\n        msg.payload = res;\n    }).catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err }\n    })\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 120,
+        "wires": [
+            [
+                "91957a35c6331fa0"
+            ]
+        ]
+    },
+    {
+        "id": "91957a35c6331fa0",
+        "type": "http response",
+        "z": "da813bbfd577c796",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 850,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "16232ff734134363",
+        "type": "http in",
+        "z": "da813bbfd577c796",
+        "name": "",
+        "url": "/product/list",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 220,
+        "wires": [
+            [
+                "e5d9bf114207e486"
+            ]
+        ]
+    },
+    {
+        "id": "e5d9bf114207e486",
+        "type": "function",
+        "z": "da813bbfd577c796",
+        "name": "按分类获取商品信息",
+        "func": "const db = global.get('mysql');\nlet categoryId =  msg.req.query.categoryId\nlet sql = \"SELECT *,a.id AS aid,a.name AS aname FROM product a, product_detail b WHERE a.id = b.product_id\"\nif (categoryId) \n    sql = sql + \" and  a.category_id = \" + categoryId\nlet lastObj = null;\nawait db.sql(sql)\n    .then(res => {\n        let data = [] ;\n        for (let i=0;i<res.length;i++){\n            //判断是否和前一条记录是同一个商品    \n            if (lastObj && lastObj.id == res[i].aid ){\n                lastObj.details.push({\n                        id : res[i].id,\n                        name : res[i].name,\n                        image : res[i].image,\n                        stock : res[i].stock,\n                        price : res[i].price,\n                        salePrice : res[i].sale_price, \n                })\n            }else{\n                let obj = {\n                    id : res[i].aid,\n                    name : res[i].aname,\n                    description : res[i].description,\n                    categoryId : res[i].category_id,\n                    showIndex : res[i].show_index,\n                    details : [{\n                        id : res[i].id,\n                        name : res[i].name,\n                        image : res[i].image,\n                        stock : res[i].stock,\n                        price : res[i].price,\n                        salePrice : res[i].sale_price,\n                    }]\n                }\n                lastObj = obj;\n                data.push(obj);\n            }\n        }\n        msg.payload = data;\n    }).catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err };\n    })\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 220,
+        "wires": [
+            [
+                "91957a35c6331fa0"
             ]
         ]
     }

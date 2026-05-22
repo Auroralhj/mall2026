@@ -136,7 +136,7 @@ const doRegister = () => {
     <div class="tan-site-topbar">
       <div class="container">
         <div>
-          <a>MoreMall商城</a>
+          <router-link to="/productList">MoreMall商城</router-link>
         </div>
         <div v-if="user.username" >
                 <img :src="user.avatar" style="width: 16px;height 16px;" />
@@ -203,10 +203,12 @@ const doRegister = () => {
         ></el-input>
     </el-form-item>
     </el-form>
-    <div slot="footer" class="dialog-footer">
-    <el-button @click="loginFormVisible = false">取 消</el-button>
-    <el-button type="primary" @click="doLogin">登 录</el-button>
-    </div>
+    <template #footer>
+      <div class="dialog-footer">
+      <el-button @click="loginFormVisible = false">取 消</el-button>
+      <el-button type="primary" @click="doLogin">登 录</el-button>
+      </div>
+    </template>
 </el-dialog>
 <el-dialog title="注册" v-model="regFormVisible">
       <el-form :model="regform" :label-width="formLabelWidth">
