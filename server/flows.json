@@ -17,7 +17,7 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 280,
+        "x": 340,
         "y": 160,
         "wires": [
             [
@@ -37,7 +37,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
+        "x": 610,
         "y": 160,
         "wires": [
             [
@@ -54,7 +54,7 @@
         "statusCode": "",
         "headers": {},
         "x": 950,
-        "y": 280,
+        "y": 380,
         "wires": []
     },
     {
@@ -83,7 +83,7 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 300,
+        "x": 320,
         "y": 260,
         "wires": [
             [
@@ -135,7 +135,7 @@
         "type": "function",
         "z": "a0cf1996dea32086",
         "name": "用户注册功能",
-        "func": "let username = msg.payload.username\nlet password = msg.payload.password\nlet email = msg.payload.email\nlet avatar = msg.payload.avatar\nmsg.payload = \"注册用户名：\"+username+\",email：\"+email+\",avatar:\"+avatar\nreturn msg;",
+        "func": "let username = msg.req.body.username\nlet password = msg.req.body.password\nlet email = msg.req.body.email\nlet avatar = msg.req.body.avatar\n//msg.payload = \"注册用户名：\"+username+\",email：\"+email+\",avatar:\"+avatar);\nconst db = global.get('mysql');\nawait db.sql(\"insert into user(username,password,email,avatar) values (?,?,?,?) \", username, password, email, avatar)\n    .then(res => {\n        console.log(res);\n        msg.payload = { code: 200, message:\"注册成功！\"};\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err };\n    })\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -161,7 +161,7 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 300,
+        "x": 320,
         "y": 460,
         "wires": [
             [
@@ -181,8 +181,47 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
+        "x": 590,
         "y": 460,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "ffdbce0a4a13e8ea",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/avatars",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 330,
+        "y": 560,
+        "wires": [
+            [
+                "92339d7abd8a9336"
+            ]
+        ]
+    },
+    {
+        "id": "92339d7abd8a9336",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "返回用户头像",
+        "func": "msg.payload = [\n  \"http://127.0.0.1:3000/public/images/avatar.jpg\",\n  \"http://127.0.0.1:3000/public/images/head_0.png\",\n  \"http://127.0.0.1:3000/public/images/head_2.png\",\n  \"http://127.0.0.1:3000/public/images/head_3.png\",\n  \"http://127.0.0.1:3000/public/images/head_7.png\",\n];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 560,
         "wires": [
             [
                 "303d55c5d08be33d",

@@ -80,6 +80,56 @@ const loadUser = () => {
 
 loadUser();
 
+const avatars = ref([]);
+
+axios
+  .get("/api/avatars")
+  .then((res) => {
+    console.log(res);
+    avatars.value = res.data;
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+const regFormVisible = ref(false);
+const regform = reactive({
+        name: "",
+        password: "",
+        email: "",
+        avatar: "",
+      });
+
+const doRegister = () => {
+      axios
+        .post("/api/user/register", {
+          username: regform.name,
+          password: regform.password,
+          email: regform.email,
+          avatar: regform.avatar,
+        })
+        .then((res) => {
+            if (res.data.code == 200){
+                ElMessage({
+                showClose: true,
+                message: '注册成功！',
+                type: 'success'
+                });
+                loginFormVisible.value = true;
+                regFormVisible.value = false;
+              }else{
+                ElMessage({
+                showClose: true,
+                message: "用户名或者email已存在!",
+                type: 'error'
+                });
+              }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    };
+
 </script>
 <template>
 <header class="tan-site-header">
@@ -158,6 +208,46 @@ loadUser();
     <el-button type="primary" @click="doLogin">登 录</el-button>
     </div>
 </el-dialog>
+<el-dialog title="注册" v-model="regFormVisible">
+      <el-form :model="regform" :label-width="formLabelWidth">
+        <el-form-item label="用户名：">
+          <el-input
+            v-model="regform.name"
+            placeholder="请输入用户名"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="密码：">
+          <el-input
+            v-model="regform.password"
+            placeholder="请输入密码"
+            show-password
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="电子邮箱：">
+          <el-input
+            v-model="regform.email"
+            placeholder="请输入电子邮箱："
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="头像：">
+          <el-radio-group v-model="regform.avatar">
+            <el-radio
+              :label="item"
+              v-for="(item, index) in avatars"
+              :key="index"
+            >
+              <img :src="item" style="width: 48px;height:48px;" />
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="regFormVisible = false">取 消</el-button>
+          <el-button type="primary" @click="doRegister">注 册</el-button>
+        </div>
+      </template>
+    </el-dialog>
 </template>
 <style scoped>
 .tan-site-header {

@@ -17,7 +17,7 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 280,
+        "x": 340,
         "y": 160,
         "wires": [
             [
@@ -37,7 +37,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
+        "x": 610,
         "y": 160,
         "wires": [
             [
@@ -54,7 +54,7 @@
         "statusCode": "",
         "headers": {},
         "x": 950,
-        "y": 280,
+        "y": 380,
         "wires": []
     },
     {
@@ -83,7 +83,7 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 300,
+        "x": 320,
         "y": 260,
         "wires": [
             [
@@ -96,7 +96,7 @@
         "type": "function",
         "z": "a0cf1996dea32086",
         "name": "处理用户登录",
-        "func": "const db = global.get('mysql');\nlet username = msg.req.body.username\nlet password = msg.req.body.password\nif (username && password) {\n    await db.sql(\"select * from user where username = ?\", username)\n    .then(res => {\n        if (res.length == 0)\n            msg.payload = { code: 400, message: \"用户名不存在!\" };\n        else if (res[0].password != password)\n            msg.payload = { code: 400, message: \"密码错误!\" };\n        else {\n            msg.payload = { code: 200, message: \"登录成功!\" };\n        }\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err };\n    })\n} else\n    msg.payload = { code: 500, message: \"登录信息不完整!\" };\nreturn msg;",
+        "func": "const db = global.get('mysql');\nlet username = msg.req.body.username\nlet password = msg.req.body.password\nif (username && password) {\n    await db.sql(\"select * from user where username = ?\", username)\n    .then(res => {\n        if (res.length == 0)\n            msg.payload = { code: 400, message: \"用户名不存在!\" };\n        else if (res[0].password != password)\n            msg.payload = { code: 400, message: \"密码错误!\" };\n        else {\n            msg.req.session.user = res[0];\n            msg.payload = { code: 200, message: \"登录成功!\" };\n        }\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err };\n    })\n} else\n    msg.payload = { code: 500, message: \"登录信息不完整!\" };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -161,7 +161,7 @@
         "upload": false,
         "skipBodyParsing": false,
         "swaggerDoc": "",
-        "x": 300,
+        "x": 320,
         "y": 460,
         "wires": [
             [
@@ -174,15 +174,54 @@
         "type": "function",
         "z": "a0cf1996dea32086",
         "name": "返回登录用户信息",
-        "func": "msg.payload = \"返回登录用户信息\"\nreturn msg;",
+        "func": "let sessionUser = {}\nObject.assign(sessionUser, msg.req.session.user);//对象复制\ndelete sessionUser.password;//删除密码\nmsg.payload = sessionUser;\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
+        "x": 590,
         "y": 460,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "ffdbce0a4a13e8ea",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/avatars",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 330,
+        "y": 560,
+        "wires": [
+            [
+                "92339d7abd8a9336"
+            ]
+        ]
+    },
+    {
+        "id": "92339d7abd8a9336",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "返回用户头像",
+        "func": "msg.payload = [\n  \"http://127.0.0.1:3000/public/images/avatar.jpg\",\n  \"http://127.0.0.1:3000/public/images/head_0.png\",\n  \"http://127.0.0.1:3000/public/images/head_2.png\",\n  \"http://127.0.0.1:3000/public/images/head_3.png\",\n  \"http://127.0.0.1:3000/public/images/head_7.png\",\n];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 560,
         "wires": [
             [
                 "303d55c5d08be33d",
