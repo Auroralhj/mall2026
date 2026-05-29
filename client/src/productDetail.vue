@@ -35,7 +35,7 @@
                     </div>
                     <div class="btns">
                         <el-button type="warning" width="298px" height="52px" font-size="16px" >立即购买</el-button>
-                        <el-button type="info" width="140px" height="52px" font-size="16px" >加入购物车</el-button>
+                        <el-button @click="addCart" type="info" width="140px" height="52px" font-size="16px" >加入购物车</el-button>
                     </div>
                 </div>
             </div>
@@ -63,6 +63,28 @@ const getProductById = (id) => {
         });
     };
 getProductById(route.params.id);
+
+
+import { ElMessage } from "element-plus"
+
+const addCart = () => {
+        let data = {
+            quantity: number.value,
+            productId: product.value.id,
+            detailId: product.value.details[product.value.showIndex].id
+        }
+        axios
+        .post("/api/cart/add", data)
+        .then((res) => {
+            if ( res.data.code == 200 )
+                ElMessage.success(res.data.message)
+            else
+                ElMessage.warning(res.data.message)
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
 
 </script>
 <style scoped>

@@ -141,6 +141,8 @@ const doRegister = () => {
         <div v-if="user.username" >
                 <img :src="user.avatar" style="width: 16px;height 16px;" />
                 <span>{{ user.username }}</span>
+
+                <router-link :to="{ path: '/cart' }">购物车</router-link>
         </div>
           <div v-else>
             <span @click="loginFormVisible = true">登录</span>

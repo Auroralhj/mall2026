@@ -16,6 +16,14 @@
         "env": []
     },
     {
+        "id": "a0c34c372201e04d",
+        "type": "tab",
+        "label": "购物车操作",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "69606c2aa0116abf",
         "type": "http in",
         "z": "a0cf1996dea32086",
@@ -321,6 +329,213 @@
         "wires": [
             [
                 "91957a35c6331fa0"
+            ]
+        ]
+    },
+    {
+        "id": "c3186e899f9f78c7",
+        "type": "http in",
+        "z": "da813bbfd577c796",
+        "name": "",
+        "url": "/product/getById",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 320,
+        "wires": [
+            [
+                "ac56f888af4f8724"
+            ]
+        ]
+    },
+    {
+        "id": "ac56f888af4f8724",
+        "type": "function",
+        "z": "da813bbfd577c796",
+        "name": "单个商品信息",
+        "func": "const db = global.get('mysql');\nlet id = msg.req.query.id\nlet sql = \"SELECT *,a.id AS aid,a.name AS aname FROM product a, product_detail b WHERE a.id = b.product_id and a.id = ?\"\nawait db.sql(sql, id)\n    .then(res => {\n        let product;\n        for (let i = 0; i < res.length; i++) {\n            //判断是否和前一条记录是同一个商品    \n            if (i > 0) {\n                product.details.push({\n                    id: res[i].id,\n                    name: res[i].name,\n                    image: res[i].image,\n                    stock: res[i].stock,\n                    price: res[i].price,\n                    salePrice: res[i].sale_price,\n                })\n            } else {\n                product = {\n                    id: res[i].aid,\n                    name: res[i].aname,\n                    description: res[i].description,\n                    categoryId: res[i].category_id,\n                    showIndex: res[i].show_index,\n                    details: [{\n                        id: res[i].id,\n                        name: res[i].name,\n                        image: res[i].image,\n                        stock: res[i].stock,\n                        price: res[i].price,\n                        salePrice: res[i].sale_price,\n                    }]\n                }\n            }\n        }\n        msg.payload = product;\n    }).catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err }\n    })\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 320,
+        "wires": [
+            [
+                "91957a35c6331fa0"
+            ]
+        ]
+    },
+    {
+        "id": "4e2df7caf1271065",
+        "type": "http in",
+        "z": "a0c34c372201e04d",
+        "name": "",
+        "url": "/cart/add",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 320,
+        "y": 180,
+        "wires": [
+            [
+                "653120fe44995884"
+            ]
+        ]
+    },
+    {
+        "id": "afe080e8a3d6924c",
+        "type": "http in",
+        "z": "a0c34c372201e04d",
+        "name": "",
+        "url": "/cart/list",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 310,
+        "y": 260,
+        "wires": [
+            [
+                "653120fe44995884"
+            ]
+        ]
+    },
+    {
+        "id": "653120fe44995884",
+        "type": "switch",
+        "z": "a0c34c372201e04d",
+        "name": "判断用户是否登录",
+        "property": "$exists(msg.req.session.user.id) and msg.req.session.user.id",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 630,
+        "y": 180,
+        "wires": [
+            [
+                "3bdd0f91859059f4"
+            ],
+            [
+                "9a9a750abe083672"
+            ]
+        ]
+    },
+    {
+        "id": "3bdd0f91859059f4",
+        "type": "function",
+        "z": "a0c34c372201e04d",
+        "name": "返回用户未登录的错误提示",
+        "func": "msg.payload = { code: 400, message: \"请先登录\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 160,
+        "wires": [
+            [
+                "9d80a626647ff208"
+            ]
+        ]
+    },
+    {
+        "id": "9d80a626647ff208",
+        "type": "http response",
+        "z": "a0c34c372201e04d",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1250,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "9a9a750abe083672",
+        "type": "switch",
+        "z": "a0c34c372201e04d",
+        "name": "判断请求的URL",
+        "property": "req.url",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "/cart/add",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "/cart/list",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 620,
+        "y": 320,
+        "wires": [
+            [
+                "8b8c35a5f7904961"
+            ],
+            [
+                "771bbd08430e5f93"
+            ]
+        ]
+    },
+    {
+        "id": "8b8c35a5f7904961",
+        "type": "function",
+        "z": "a0c34c372201e04d",
+        "name": "商品添加到购物车",
+        "func": "const db = global.get('mysql');\nlet productId = msg.req.body.productId;     //商品id\nlet detailId = msg.req.body.detailId;       //具体商品id\nlet number = msg.req.body.quantity;         //商品数量\nlet userId = msg.req.session.user.id;       //当前登录用户id    \n// 这里应该要验证数据的合法性，比如用户id是否存在，储存是否足够等信息\n// 这里暂时不做验证\nawait db.sql(\"select * from cart where product_id = ? and detail_id = ? and user_id = ?\", productId, detailId, userId)\n    .then(async res => {\n        let now = new Date()\n        // 如果已经存在了这条记录，只要添加就数量就好了\n        if (res.length > 0) {\n            let cartId = res[0].id;\n            await db.sql(\"update cart set quantity = quantity + ?, update_time = ? where id = ? \", number, now, cartId)\n                .then(res => {\n                    msg.payload = { code: 200, message: \"更新成功！\" }\n                })\n                .catch(err => {\n                    console.log(err);\n                    msg.payload = { code: 500, err }\n                })\n        }\n        // 否则就是新增\n        else {\n            await db.sql(\"insert into cart(quantity, checked, product_id, detail_id, user_id, create_time, update_time) values(?, ?, ?, ?, ?, ?, ?)\",\n                number, true, productId, detailId, userId, now, now)\n                .then(res => {\n                    msg.payload = { code: 200, message: \"添加成功！\" }\n                })\n                .catch(err => {\n                    console.log(err);\n                    msg.payload = { code: 500, err }\n                })\n        }\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err }\n    })\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 240,
+        "wires": [
+            [
+                "9d80a626647ff208"
+            ]
+        ]
+    },
+    {
+        "id": "771bbd08430e5f93",
+        "type": "function",
+        "z": "a0c34c372201e04d",
+        "name": "查询用户购物车中的商品",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user.id;\nawait db.sql(`SELECT *, a.id AS pid,b.id AS pdid,a.name AS pname\nFROM product a,product_detail b,cart c \nWHERE c.product_id = a.id AND c.detail_id = b.id AND c.user_id = ?`, userId)\n    .then(res => {\n        msg.payload = res;\n    })\n    .catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err }\n    })\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 320,
+        "wires": [
+            [
+                "9d80a626647ff208"
             ]
         ]
     }
