@@ -71,6 +71,8 @@
               font-size="18px"
               height="48px"
               width="200px"
+              @click="goCheckout"
+              :disabled="checkedCount === 0"
               >去结算</el-button>
           </span>
         </div>
@@ -92,7 +94,10 @@
 
 import axios from 'axios'
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+
+const router = useRouter();
 
 const carts = ref([]);
 
@@ -182,6 +187,25 @@ const changeQuantity = (cart) => {
       console.log(err);
     });
 };    
+
+const goCheckout = () => {
+  const checkedItems = carts.value.filter(c => c.checked);
+  if (!checkedItems.length) {
+    ElMessage.warning('请先选择商品');
+    return;
+  }
+  const data = checkedItems.map(c => ({
+    productId: c.pid,
+    detailId: c.pdid,
+    name: c.pname,
+    detailName: c.name,
+    image: c.image,
+    price: c.sale_price,
+    quantity: c.quantity
+  }));
+  sessionStorage.setItem('checkoutItems', JSON.stringify(data));
+  router.push('/checkout');
+};
 
 const remove = (cartId) => {
   axios

@@ -34,7 +34,7 @@
                         <el-input-number v-model="number" :min="1"></el-input-number>
                     </div>
                     <div class="btns">
-                        <el-button type="warning" width="298px" height="52px" font-size="16px" >立即购买</el-button>
+                        <el-button type="warning" width="298px" height="52px" font-size="16px" @click="buyNow">立即购买</el-button>
                         <el-button @click="addCart" type="info" width="140px" height="52px" font-size="16px" >加入购物车</el-button>
                     </div>
                 </div>
@@ -45,9 +45,9 @@
 <script setup>
 import axios from 'axios'
 import { ref } from 'vue';
-
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
+const router = useRouter();
 const product = ref(null);
 const number = ref(1);
 
@@ -66,6 +66,21 @@ getProductById(route.params.id);
 
 
 import { ElMessage } from "element-plus"
+
+const buyNow = () => {
+    const detail = product.value.details[product.value.showIndex];
+    const data = [{
+        productId: product.value.id,
+        detailId: detail.id,
+        name: product.value.name,
+        detailName: detail.name,
+        image: detail.image,
+        price: detail.salePrice,
+        quantity: number.value
+    }];
+    sessionStorage.setItem('checkoutItems', JSON.stringify(data));
+    router.push('/checkout');
+};
 
 const addCart = () => {
         let data = {

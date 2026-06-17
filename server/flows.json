@@ -268,7 +268,7 @@
         "type": "function",
         "z": "da813bbfd577c796",
         "name": "获取商品分类信息",
-        "func": "const db = global.get('mysql');\nawait db.sql(\"SELECT * FROM product_category\")\n    .then(res => {\n        msg.payload = res;\n    }).catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err }\n    })\nreturn msg;",
+        "func": "const db = global.get('mysql');\nawait db.sql(\"SELECT * FROM product_category ORDER BY id ASC\")\n    .then(res => {\n        msg.payload = res;\n    }).catch(err => {\n        console.log(err);\n        msg.payload = { code: 500, err }\n    })\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -674,6 +674,735 @@
         "wires": [
             [
                 "9d80a626647ff208"
+            ]
+        ]
+    },
+    {
+        "id": "df1cb30958f2bd25",
+        "type": "tab",
+        "label": "收货地址",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "8ae21c52fb9627c1",
+        "type": "http in",
+        "z": "df1cb30958f2bd25",
+        "name": "",
+        "url": "/contact/list",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "af47b8ee5b22f88b"
+            ]
+        ]
+    },
+    {
+        "id": "af47b8ee5b22f88b",
+        "type": "function",
+        "z": "df1cb30958f2bd25",
+        "name": "查询用户地址列表",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) {\n    msg.payload = { code: 400, message: \"请先登录\" };\n    return msg;\n}\nawait db.sql(\"SELECT * FROM contact WHERE user_id = ? ORDER BY create_time DESC\", userId)\n    .then(res => { msg.payload = res; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 120,
+        "wires": [
+            [
+                "3d78aa0ae29b5cc6",
+                "3418da4329d8cbd3"
+            ]
+        ]
+    },
+    {
+        "id": "ff3642052ace60ff",
+        "type": "http in",
+        "z": "df1cb30958f2bd25",
+        "name": "",
+        "url": "/contact/add",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "ee77800b73cdb34c"
+            ]
+        ]
+    },
+    {
+        "id": "ee77800b73cdb34c",
+        "type": "function",
+        "z": "df1cb30958f2bd25",
+        "name": "新增收货地址",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) {\n    msg.payload = { code: 400, message: \"请先登录\" };\n    return msg;\n}\nlet { name, telephone, address, tag } = msg.req.body;\nif (!name || !telephone || !address || !tag) {\n    msg.payload = { code: 400, message: \"地址信息不完整\" };\n    return msg;\n}\nlet now = new Date();\nawait db.sql(\"INSERT INTO contact(name, telephone, address, tag, user_id, create_time, update_time) VALUES (?,?,?,?,?,?,?)\",\n    name, telephone, address, tag, userId, now, now)\n    .then(res => { msg.payload = { code: 200, message: \"地址添加成功！\", id: res.insertId }; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 200,
+        "wires": [
+            [
+                "3d78aa0ae29b5cc6",
+                "3418da4329d8cbd3"
+            ]
+        ]
+    },
+    {
+        "id": "c180d3e300fed727",
+        "type": "http in",
+        "z": "df1cb30958f2bd25",
+        "name": "",
+        "url": "/contact/update",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 280,
+        "wires": [
+            [
+                "19672f81d7c35e70"
+            ]
+        ]
+    },
+    {
+        "id": "19672f81d7c35e70",
+        "type": "function",
+        "z": "df1cb30958f2bd25",
+        "name": "修改收货地址",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) {\n    msg.payload = { code: 400, message: \"请先登录\" };\n    return msg;\n}\nlet { id, name, telephone, address, tag } = msg.req.body;\nif (!id) {\n    msg.payload = { code: 400, message: \"缺少地址ID\" };\n    return msg;\n}\nlet now = new Date();\nawait db.sql(\"UPDATE contact SET name=?, telephone=?, address=?, tag=?, update_time=? WHERE id=? AND user_id=?\",\n    name, telephone, address, tag, now, id, userId)\n    .then(res => {\n        if (res.affectedRows > 0)\n            msg.payload = { code: 200, message: \"地址修改成功！\" };\n        else\n            msg.payload = { code: 400, message: \"地址不存在或无权修改\" };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 280,
+        "wires": [
+            [
+                "3d78aa0ae29b5cc6",
+                "3418da4329d8cbd3"
+            ]
+        ]
+    },
+    {
+        "id": "2127efe82a2dc280",
+        "type": "http in",
+        "z": "df1cb30958f2bd25",
+        "name": "",
+        "url": "/contact/delete",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 360,
+        "wires": [
+            [
+                "d45bcc0a01f63c8b"
+            ]
+        ]
+    },
+    {
+        "id": "d45bcc0a01f63c8b",
+        "type": "function",
+        "z": "df1cb30958f2bd25",
+        "name": "删除收货地址",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) {\n    msg.payload = { code: 400, message: \"请先登录\" };\n    return msg;\n}\nlet { id } = msg.req.body;\nif (!id) {\n    msg.payload = { code: 400, message: \"缺少地址ID\" };\n    return msg;\n}\nawait db.sql(\"DELETE FROM contact WHERE id=? AND user_id=?\", id, userId)\n    .then(res => {\n        if (res.affectedRows > 0)\n            msg.payload = { code: 200, message: \"地址删除成功！\" };\n        else\n            msg.payload = { code: 400, message: \"地址不存在或无权删除\" };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 360,
+        "wires": [
+            [
+                "3d78aa0ae29b5cc6",
+                "3418da4329d8cbd3"
+            ]
+        ]
+    },
+    {
+        "id": "3d78aa0ae29b5cc6",
+        "type": "http response",
+        "z": "df1cb30958f2bd25",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 850,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "3418da4329d8cbd3",
+        "type": "debug",
+        "z": "df1cb30958f2bd25",
+        "name": "debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "af9a6e8d030858e2",
+        "type": "tab",
+        "label": "订单操作",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7f01674397b6327d",
+        "type": "http in",
+        "z": "af9a6e8d030858e2",
+        "name": "",
+        "url": "/order/submit",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "a0d4223a29190763"
+            ]
+        ]
+    },
+    {
+        "id": "a0d4223a29190763",
+        "type": "function",
+        "z": "af9a6e8d030858e2",
+        "name": "提交订单",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nlet { contactId, items } = msg.req.body;\nif (!contactId) { msg.payload = { code: 400, message: \"请选择收货地址\" }; return msg; }\nif (!items || !items.length) { msg.payload = { code: 400, message: \"订单商品不能为空\" }; return msg; }\n\n// 生成订单ID：年月日时分秒+3位随机数\nlet now = new Date();\nlet y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');\nlet hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0'), ss = String(now.getSeconds()).padStart(2,'0');\nlet rand = String(Math.floor(Math.random()*900+100));\nlet orderId = y+m+d+hh+mm+ss+rand;\n\n// 计算总价\nlet totalPrice = 0;\nfor (let item of items) {\n    let detail = await db.sql(\"SELECT sale_price FROM product_detail WHERE id=?\", item.detailId);\n    if (detail.length > 0) totalPrice += parseFloat(detail[0].sale_price) * item.quantity;\n}\n\n// 插入订单\nawait db.sql(\"INSERT INTO `order`(id, price, paid, contact_id, user_id, create_time, update_time) VALUES(?,?,?,?,?,?,?)\",\n    orderId, totalPrice.toFixed(2), 0, contactId, userId, now, now);\n\n// 插入订单明细 + 删除购物车中已勾选的商品\nfor (let item of items) {\n    await db.sql(\"INSERT INTO order_detail(quantity, order_id, product_id, detail_id, create_time, update_time) VALUES(?,?,?,?,?,?)\",\n        item.quantity, orderId, item.productId, item.detailId, now, now);\n    await db.sql(\"DELETE FROM cart WHERE user_id=? AND product_id=? AND detail_id=? AND checked=1\",\n        userId, item.productId, item.detailId);\n}\n\nmsg.payload = { code: 200, message: \"下单成功！\", orderId: orderId };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 120,
+        "wires": [
+            [
+                "c92902942ed69389",
+                "dee8ec1e0df3bfe2"
+            ]
+        ]
+    },
+    {
+        "id": "9c57cf09621fabea",
+        "type": "http in",
+        "z": "af9a6e8d030858e2",
+        "name": "",
+        "url": "/order/list",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "da752e49220730cc"
+            ]
+        ]
+    },
+    {
+        "id": "da752e49220730cc",
+        "type": "function",
+        "z": "af9a6e8d030858e2",
+        "name": "查询订单列表",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nawait db.sql(\"SELECT o.*, c.name AS contact_name, c.telephone, c.address FROM `order` o LEFT JOIN contact c ON o.contact_id=c.id WHERE o.user_id=? ORDER BY o.create_time DESC\", userId)\n    .then(res => { msg.payload = res; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 200,
+        "wires": [
+            [
+                "c92902942ed69389",
+                "dee8ec1e0df3bfe2"
+            ]
+        ]
+    },
+    {
+        "id": "ff03a12555a878a8",
+        "type": "http in",
+        "z": "af9a6e8d030858e2",
+        "name": "",
+        "url": "/order/detail",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 280,
+        "wires": [
+            [
+                "7d50bfbf17fcfa92"
+            ]
+        ]
+    },
+    {
+        "id": "7d50bfbf17fcfa92",
+        "type": "function",
+        "z": "af9a6e8d030858e2",
+        "name": "查询订单详情",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nlet orderId = msg.req.query.id;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nif (!orderId) { msg.payload = { code: 400, message: \"缺少订单ID\" }; return msg; }\nlet order = null;\nawait db.sql(\"SELECT o.*, c.name AS contact_name, c.telephone, c.address, c.tag FROM `order` o LEFT JOIN contact c ON o.contact_id=c.id WHERE o.id=? AND o.user_id=?\", orderId, userId)\n    .then(async res => {\n        if (res.length === 0) { msg.payload = { code: 400, message: \"订单不存在\" }; return; }\n        order = res[0];\n        await db.sql(\"SELECT od.*, p.name AS pname, pd.name AS detail_name, pd.image, pd.sale_price FROM order_detail od LEFT JOIN product p ON od.product_id=p.id LEFT JOIN product_detail pd ON od.detail_id=pd.id WHERE od.order_id=?\", orderId)\n            .then(details => {\n                order.details = details;\n                msg.payload = order;\n            });\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 280,
+        "wires": [
+            [
+                "c92902942ed69389",
+                "dee8ec1e0df3bfe2"
+            ]
+        ]
+    },
+    {
+        "id": "a20a47ac6262a205",
+        "type": "http in",
+        "z": "af9a6e8d030858e2",
+        "name": "",
+        "url": "/order/pay",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 360,
+        "wires": [
+            [
+                "f0d90c94acf0ab4e"
+            ]
+        ]
+    },
+    {
+        "id": "f0d90c94acf0ab4e",
+        "type": "function",
+        "z": "af9a6e8d030858e2",
+        "name": "模拟支付",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nlet { orderId } = msg.req.body;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nif (!orderId) { msg.payload = { code: 400, message: \"缺少订单ID\" }; return msg; }\nlet now = new Date();\nawait db.sql(\"UPDATE `order` SET paid=1, update_time=? WHERE id=? AND user_id=?\", now, orderId, userId)\n    .then(res => {\n        if (res.affectedRows > 0) msg.payload = { code: 200, message: \"支付成功！\" };\n        else msg.payload = { code: 400, message: \"订单不存在或无权操作\" };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 360,
+        "wires": [
+            [
+                "c92902942ed69389",
+                "dee8ec1e0df3bfe2"
+            ]
+        ]
+    },
+    {
+        "id": "c92902942ed69389",
+        "type": "http response",
+        "z": "af9a6e8d030858e2",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 850,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "dee8ec1e0df3bfe2",
+        "type": "debug",
+        "z": "af9a6e8d030858e2",
+        "name": "debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "60a6109e137766bb",
+        "type": "tab",
+        "label": "后台管理",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "6ff035d30768baeb",
+        "type": "http in",
+        "z": "60a6109e137766bb",
+        "name": "",
+        "url": "/admin/product/add",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "05d56935ff48ad5a"
+            ]
+        ]
+    },
+    {
+        "id": "05d56935ff48ad5a",
+        "type": "function",
+        "z": "60a6109e137766bb",
+        "name": "新增商品",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { name, description, categoryId, details } = msg.req.body;\nif (!name || !categoryId || !details || !details.length) {\n    msg.payload = { code: 400, message: '商品信息不完整' }; return msg;\n}\nlet now = new Date();\nawait db.sql('INSERT INTO product(name, description, category_id, show_index) VALUES(?,?,?,0)', name, description, categoryId)\n    .then(async res => {\n        let productId = res.insertId;\n        for (let d of details) {\n            await db.sql('INSERT INTO product_detail(name, image, stock, price, sale_price, product_id) VALUES(?,?,?,?,?,?)',\n                d.name, d.image, d.stock, d.price, d.salePrice, productId);\n        }\n        msg.payload = { code: 200, message: '商品添加成功！', productId: productId };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 120,
+        "wires": [
+            [
+                "4cd48e85b0c6152f",
+                "5933def0ee056754"
+            ]
+        ]
+    },
+    {
+        "id": "8e94bfd1899fd2d2",
+        "type": "http in",
+        "z": "60a6109e137766bb",
+        "name": "",
+        "url": "/admin/product/update",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "c3e1521484f65b73"
+            ]
+        ]
+    },
+    {
+        "id": "c3e1521484f65b73",
+        "type": "function",
+        "z": "60a6109e137766bb",
+        "name": "修改商品",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { id, name, description, categoryId, details } = msg.req.body;\nif (!id) { msg.payload = { code: 400, message: '缺少商品ID' }; return msg; }\nawait db.sql('UPDATE product SET name=?, description=?, category_id=? WHERE id=?', name, description, categoryId, id);\nif (details && details.length) {\n    await db.sql('DELETE FROM product_detail WHERE product_id=?', id);\n    for (let d of details) {\n        await db.sql('INSERT INTO product_detail(name, image, stock, price, sale_price, product_id) VALUES(?,?,?,?,?,?)',\n            d.name, d.image, d.stock, d.price, d.salePrice, id);\n    }\n}\nmsg.payload = { code: 200, message: '商品修改成功！' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 200,
+        "wires": [
+            [
+                "4cd48e85b0c6152f",
+                "5933def0ee056754"
+            ]
+        ]
+    },
+    {
+        "id": "dab3f441f3f85dc4",
+        "type": "http in",
+        "z": "60a6109e137766bb",
+        "name": "",
+        "url": "/admin/product/delete",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 280,
+        "wires": [
+            [
+                "f8515ac728426ffe"
+            ]
+        ]
+    },
+    {
+        "id": "f8515ac728426ffe",
+        "type": "function",
+        "z": "60a6109e137766bb",
+        "name": "删除商品",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { id } = msg.req.body;\nif (!id) { msg.payload = { code: 400, message: '缺少商品ID' }; return msg; }\nawait db.sql('DELETE FROM product_detail WHERE product_id=?', id);\nawait db.sql('DELETE FROM product WHERE id=?', id);\nmsg.payload = { code: 200, message: '商品删除成功！' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 280,
+        "wires": [
+            [
+                "4cd48e85b0c6152f",
+                "5933def0ee056754"
+            ]
+        ]
+    },
+    {
+        "id": "d581762772bb4f72",
+        "type": "http in",
+        "z": "60a6109e137766bb",
+        "name": "",
+        "url": "/admin/category/add",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 360,
+        "wires": [
+            [
+                "b68d4a6134ebc734"
+            ]
+        ]
+    },
+    {
+        "id": "b68d4a6134ebc734",
+        "type": "function",
+        "z": "60a6109e137766bb",
+        "name": "新增分类",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { name } = msg.req.body;\nif (!name) { msg.payload = { code: 400, message: '分类名称不能为空' }; return msg; }\nlet now = new Date();\nawait db.sql('INSERT INTO product_category(name, create_time, update_time) VALUES(?,?,?)', name, now, now)\n    .then(res => { msg.payload = { code: 200, message: '分类添加成功！', id: res.insertId }; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 360,
+        "wires": [
+            [
+                "4cd48e85b0c6152f",
+                "5933def0ee056754"
+            ]
+        ]
+    },
+    {
+        "id": "4cd48e85b0c6152f",
+        "type": "http response",
+        "z": "60a6109e137766bb",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 850,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "5933def0ee056754",
+        "type": "debug",
+        "z": "60a6109e137766bb",
+        "name": "debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "cat_del_in",
+        "type": "http in",
+        "z": "60a6109e137766bb",
+        "name": "",
+        "url": "/admin/category/delete",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 420,
+        "wires": [
+            [
+                "cat_del_func"
+            ]
+        ]
+    },
+    {
+        "id": "cat_del_func",
+        "type": "function",
+        "z": "60a6109e137766bb",
+        "name": "删除分类",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { id } = msg.req.body;\nif (!id) { msg.payload = { code: 400, message: '分类ID不能为空' }; return msg; }\nawait db.sql('DELETE FROM product_category WHERE id=?', id)\n    .then(res => { msg.payload = { code: 200, message: '分类删除成功！' }; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 420,
+        "wires": [
+            [
+                "4cd48e85b0c6152f",
+                "5933def0ee056754"
+            ]
+        ]
+    },
+    {
+        "id": "b4c1ba955de38ce4",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/user/update",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 320,
+        "y": 660,
+        "wires": [
+            [
+                "f0708b4126791fa3"
+            ]
+        ]
+    },
+    {
+        "id": "f0708b4126791fa3",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "修改用户信息",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { username, avatar } = msg.req.body;\nlet updates = [], args = [];\nif (username) { updates.push('username=?'); args.push(username); }\nif (avatar) { updates.push('avatar=?'); args.push(avatar); }\nif (!updates.length) { msg.payload = { code: 400, message: '没有要修改的信息' }; return msg; }\nargs.push(userId);\nawait db.sql('UPDATE user SET ' + updates.join(',') + ' WHERE id=?', ...args)\n    .then(async res => {\n        let user = await db.sql('SELECT * FROM user WHERE id=?', userId);\n        if (user.length) { msg.req.session.user = user[0]; msg.payload = { code: 200, message: '修改成功！' }; }\n        else msg.payload = { code: 500, message: '用户不存在' };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 660,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "df75fa9c39f64c98",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/user/password",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 320,
+        "y": 760,
+        "wires": [
+            [
+                "8be6158e4dc8b685"
+            ]
+        ]
+    },
+    {
+        "id": "8be6158e4dc8b685",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "修改密码",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: '请先登录' }; return msg; }\nlet { oldPassword, newPassword } = msg.req.body;\nif (!oldPassword || !newPassword) { msg.payload = { code: 400, message: '密码信息不完整' }; return msg; }\nif (newPassword.length < 3) { msg.payload = { code: 400, message: '新密码长度不少于3位' }; return msg; }\nawait db.sql('SELECT * FROM user WHERE id=?', userId)\n    .then(async res => {\n        if (!res.length || res[0].password !== oldPassword) {\n            msg.payload = { code: 400, message: '原密码错误' };\n            return;\n        }\n        await db.sql('UPDATE user SET password=? WHERE id=?', newPassword, userId);\n        msg.payload = { code: 200, message: '密码修改成功！' };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 760,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
+            ]
+        ]
+    },
+    {
+        "id": "abae159bfe4cbb5a",
+        "type": "http in",
+        "z": "a0cf1996dea32086",
+        "name": "",
+        "url": "/product/search",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 860,
+        "wires": [
+            [
+                "c120d048a3fd71ec"
+            ]
+        ]
+    },
+    {
+        "id": "c120d048a3fd71ec",
+        "type": "function",
+        "z": "a0cf1996dea32086",
+        "name": "商品搜索",
+        "func": "const db = global.get('mysql');\nlet keyword = msg.req.query.keyword;\nif (!keyword) { msg.payload = []; return msg; }\nawait db.sql(\"SELECT *, a.id AS aid, a.name AS aname FROM product a, product_detail b WHERE a.id = b.product_id AND a.name LIKE ?\", '%'+keyword+'%')\n    .then(res => {\n        let data = [], lastObj = null;\n        for (let i=0; i<res.length; i++) {\n            if (lastObj && lastObj.id == res[i].aid) {\n                lastObj.details.push({ id: res[i].id, name: res[i].name, image: res[i].image, stock: res[i].stock, price: res[i].price, salePrice: res[i].sale_price });\n            } else {\n                let obj = { id: res[i].aid, name: res[i].aname, description: res[i].description, categoryId: res[i].category_id, showIndex: 0, details: [{ id: res[i].id, name: res[i].name, image: res[i].image, stock: res[i].stock, price: res[i].price, salePrice: res[i].sale_price }] };\n                lastObj = obj; data.push(obj);\n            }\n        }\n        msg.payload = data;\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 860,
+        "wires": [
+            [
+                "303d55c5d08be33d",
+                "27ea0ce413058983"
             ]
         ]
     }

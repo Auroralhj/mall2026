@@ -5,6 +5,9 @@ import icon3 from './assets/icon3.png'
 import {ref, reactive} from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+
+const router = useRouter();
 
 const formLabelWidth = ref("90px");
 const loginFormVisible = ref(false);
@@ -130,6 +133,57 @@ const doRegister = () => {
         });
     };
 
+// 个人设置
+const settingsVisible = ref(false);
+const saving = ref(false);
+const settingsForm = reactive({
+  nickname: '', avatar: '', oldPassword: '', newPassword: '', confirmPassword: ''
+});
+
+const openSettings = () => {
+  settingsForm.nickname = user.value.username || '';
+  settingsForm.avatar = user.value.avatar || '';
+  settingsForm.oldPassword = '';
+  settingsForm.newPassword = '';
+  settingsForm.confirmPassword = '';
+  settingsVisible.value = true;
+};
+
+const saveSettings = () => {
+  if (settingsForm.nickname !== user.value.username || settingsForm.avatar !== user.value.avatar) {
+    saving.value = true;
+    axios.post('/api/user/update', { username: settingsForm.nickname, avatar: settingsForm.avatar })
+      .then(res => {
+        if (res.data.code === 200) {
+          user.value.username = settingsForm.nickname;
+          user.value.avatar = settingsForm.avatar;
+          ElMessage.success('信息已更新');
+        } else ElMessage.warning(res.data.message);
+      }).catch(err => console.log(err)).finally(() => { saving.value = false });
+  }
+  if (settingsForm.oldPassword || settingsForm.newPassword) {
+    if (!settingsForm.oldPassword) { ElMessage.warning('请输入原密码'); return; }
+    if (!settingsForm.newPassword) { ElMessage.warning('请输入新密码'); return; }
+    if (settingsForm.newPassword !== settingsForm.confirmPassword) { ElMessage.warning('两次密码不一致'); return; }
+    saving.value = true;
+    axios.post('/api/user/password', { oldPassword: settingsForm.oldPassword, newPassword: settingsForm.newPassword })
+      .then(res => {
+        if (res.data.code === 200) {
+          ElMessage.success('密码已修改，请重新登录');
+          user.value = {}; settingsVisible.value = false;
+        } else ElMessage.warning(res.data.message);
+      }).catch(err => console.log(err)).finally(() => { saving.value = false });
+  }
+};
+
+const handleUserCommand = (command) => {
+  switch (command) {
+    case 'settings': openSettings(); break;
+    case 'orders': router.push('/orderList'); break;
+    case 'logout': user.value = {}; ElMessage.success('已退出登录'); router.push('/'); break;
+  }
+};
+
 </script>
 <template>
 <header class="tan-site-header">
@@ -138,11 +192,23 @@ const doRegister = () => {
         <div>
           <router-link to="/productList">MoreMall商城</router-link>
         </div>
-        <div v-if="user.username" >
-                <img :src="user.avatar" style="width: 16px;height 16px;" />
-                <span>{{ user.username }}</span>
-
+        <div v-if="user.username" class="user-area">
                 <router-link :to="{ path: '/cart' }">购物车</router-link>
+                <router-link to="/admin">后台管理</router-link>
+                <el-dropdown @command="handleUserCommand" trigger="click">
+                  <span class="user-dropdown-trigger">
+                    <img :src="user.avatar" class="user-avatar" />
+                    <span>{{ user.username }}</span>
+                    <el-icon><ArrowDown /></el-icon>
+                  </span>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="settings">个人设置</el-dropdown-item>
+                      <el-dropdown-item command="orders">我的订单</el-dropdown-item>
+                      <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
         </div>
           <div v-else>
             <span @click="loginFormVisible = true">登录</span>
@@ -252,6 +318,36 @@ const doRegister = () => {
         </div>
       </template>
     </el-dialog>
+
+    <!-- 个人设置弹窗 -->
+    <el-dialog title="个人设置" v-model="settingsVisible" width="480px">
+      <el-form :model="settingsForm" label-width="90px">
+        <el-form-item label="昵称">
+          <el-input v-model="settingsForm.nickname" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item label="头像">
+          <el-radio-group v-model="settingsForm.avatar">
+            <el-radio v-for="(item, index) in avatars" :key="index" :label="item">
+              <img :src="item" style="width:40px;height:40px;border-radius:50%;" />
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-divider>修改密码（留空则不修改）</el-divider>
+        <el-form-item label="原密码">
+          <el-input v-model="settingsForm.oldPassword" type="password" placeholder="请输入原密码" show-password />
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input v-model="settingsForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+        </el-form-item>
+        <el-form-item label="确认密码">
+          <el-input v-model="settingsForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="settingsVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveSettings" :loading="saving">保存</el-button>
+      </template>
+    </el-dialog>
 </template>
 <style scoped>
 .tan-site-header {
@@ -336,5 +432,30 @@ const doRegister = () => {
 
 .tan-site-footer-bottom > p {
     margin: 5px;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #b0b0b0;
+  line-height: 40px;
+  font-size: 12px;
+  transition: color .3s;
+}
+.user-dropdown-trigger:hover { color: #fff; }
+
+.user-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  vertical-align: middle;
 }
 </style>

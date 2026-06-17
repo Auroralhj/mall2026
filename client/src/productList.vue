@@ -22,8 +22,8 @@
             </li>
         </ul>
         <div class="tan-header-search">
-            <input class="tan-header-search-input" type="text" />
-            <button class="tan-header-search-btn">&#128269;</button>
+            <input v-model="keyword" class="tan-header-search-input" type="text" placeholder="搜索商品" @keyup.enter="search" />
+            <button class="tan-header-search-btn" @click="search">&#128269;</button>
         </div>
     </div>
     <ul class="tan-product-list-products">
@@ -76,6 +76,7 @@ const getCategory = () =>{
 getCategory();
 
 const productList = ref([]);
+const keyword = ref('');
 
 const getProduct = (cid) => {
         let url = "/api/product/list?categoryId=";
@@ -92,79 +93,101 @@ const getProduct = (cid) => {
 };
 getProduct(null);
 
+const search = () => {
+    const kw = keyword.value.trim();
+    if (!kw) { getProduct(null); return; }
+    axios.get('/api/product/search?keyword=' + kw)
+        .then(res => { productList.value = res.data; })
+        .catch(err => { console.log(err); });
+};
+
 </script>
 <style scoped>
 .tan-header {
       display: flex;
-      height: 100px;
-      align-self: center;
-      position: relative;
+      align-items: center;
+      height: 80px;
   }
-  
+
+  .tan-header-logo {
+      flex-shrink: 0;
+  }
+
+  .tan-header-logo img {
+      height: 44px;
+      vertical-align: middle;
+  }
+
   .tan-header-nav {
       display: flex;
-      margin-left: 100px;
+      margin-left: 60px;
   }
-  
+
   .tan-header-nav-item {
-      padding: 38px 12px;
+      padding: 0 16px;
   }
-  
+
   .tan-header-nav-item > a {
-      font-size: 16px;
+      font-size: 15px;
       color: #333;
       text-decoration-line: none;
       transition: color .2s;
+      line-height: 80px;
   }
-  
+
   .tan-header-nav-item > a:hover {
       color: #ff6700;
   }
-  .tan-header-logo img{
-      height: 50px;
-      padding-top:25px
-  }
-  
+
   .tan-header-search {
       display: flex;
-      height: 50px;
-      margin-top: 26px;
-      position: absolute;
-      right: 0;
+      align-items: center;
+      margin-left: auto;
   }
-  
-  .tan-header-search-input, 
+
+  .tan-header-search-input,
   .tan-header-search-btn {
-      height: 48px;
+      height: 40px;
       border: 1px solid #e0e0e0;
       outline: none;
-      transition: all .3s;
+      transition: border-color .3s;
+      box-sizing: border-box;
   }
-  
+
   .tan-header-search:hover > .tan-header-search-input,
   .tan-header-search:hover > .tan-header-search-btn {
       border-color: #b0b0b0;
   }
-  
-  .tan-header-search > .tan-header-search-input:focus, 
+
+  .tan-header-search > .tan-header-search-input:focus,
   .tan-header-search > .tan-header-search-input:focus + .tan-header-search-btn {
       border-color: #ff6700;
   }
-  
+
   .tan-header-search-input {
-      width: 223px;
-      padding: 0 10px;
+      width: 240px;
+      padding: 0 12px;
+      font-size: 14px;
+      border-right: none;
+      border-radius: 4px 0 0 4px;
   }
-  
+
   .tan-header-search-btn {
-      width: 52px;
-      height: 50px;
+      width: 48px;
       color: #616161;
       background-color: #fff;
-      position: relative;
-      left: -1px;
       cursor: pointer;
-      font-size: 22px;
+      font-size: 18px;
+      border-radius: 0 4px 4px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .tan-header-search-btn:hover {
+      background-color: #ff6700;
+      color: #fff;
+      border-color: #ff6700;
   }
   .tan-image-item{
       height: 460px;

@@ -2,26 +2,8 @@
   <router-view/>
 </template>
 <style>
-
+/* 全局样式在 style.css 中统一管理 */
 nav {
-  padding: 30px;
+  padding: 0;
 }
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
-
-ul {
-    list-style: none;
-}
-
-a {
-    text-decoration-line: none;
-}
-
 </style>
