@@ -938,7 +938,7 @@
         "type": "function",
         "z": "af9a6e8d030858e2",
         "name": "查询订单列表",
-        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nawait db.sql(\"SELECT o.*, c.name AS contact_name, c.telephone, c.address FROM `order` o LEFT JOIN contact c ON o.contact_id=c.id WHERE o.user_id=? ORDER BY o.create_time DESC\", userId)\n    .then(res => { msg.payload = res; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nawait db.sql(\"SELECT o.*, c.name AS contact_name, c.telephone, c.address FROM `order` o LEFT JOIN contact c ON o.contact_id=c.id WHERE o.user_id=? AND o.refunded=0 ORDER BY o.create_time DESC\", userId)\n    .then(res => { msg.payload = res; })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1058,6 +1058,45 @@
         "x": 850,
         "y": 120,
         "wires": []
+    },
+    {
+        "id": "d7e38f0a2c1b96af",
+        "type": "http in",
+        "z": "af9a6e8d030858e2",
+        "name": "",
+        "url": "/order/refund",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 440,
+        "wires": [
+            [
+                "a5f2c7e1396b8d03"
+            ]
+        ]
+    },
+    {
+        "id": "a5f2c7e1396b8d03",
+        "type": "function",
+        "z": "af9a6e8d030858e2",
+        "name": "申请退款",
+        "func": "const db = global.get('mysql');\nlet userId = msg.req.session.user?.id;\nlet { orderId } = msg.req.body;\nif (!userId) { msg.payload = { code: 400, message: \"请先登录\" }; return msg; }\nif (!orderId) { msg.payload = { code: 400, message: \"缺少订单ID\" }; return msg; }\nlet now = new Date();\nlet order = await db.sql(\"SELECT * FROM `order` WHERE id=? AND user_id=?\", orderId, userId);\nif (!order.length) { msg.payload = { code: 400, message: \"订单不存在或无权操作\" }; return msg; }\nif (!order[0].paid) { msg.payload = { code: 400, message: \"订单未支付，无需退款\" }; return msg; }\nif (order[0].refunded) { msg.payload = { code: 400, message: \"订单已退款，请勿重复操作\" }; return msg; }\nawait db.sql(\"UPDATE `order` SET refunded=1, update_time=? WHERE id=?\", now, orderId)\n    .then(res => {\n        if (res.affectedRows > 0) msg.payload = { code: 200, message: \"退款成功！\" };\n        else msg.payload = { code: 400, message: \"退款失败\" };\n    })\n    .catch(err => { console.log(err); msg.payload = { code: 500, err }; });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 440,
+        "wires": [
+            [
+                "c92902942ed69389",
+                "dee8ec1e0df3bfe2"
+            ]
+        ]
     },
     {
         "id": "60a6109e137766bb",

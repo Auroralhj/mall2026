@@ -43,6 +43,15 @@
               @click="payOrder(order.id)"
               :loading="payingId === order.id"
             >去支付</el-button>
+            <el-popconfirm
+              v-if="order.paid"
+              title="确定申请退款？"
+              @confirm="refundOrder(order.id)"
+            >
+              <template #reference>
+                <el-button type="warning" size="small" :loading="refundingId === order.id">申请退款</el-button>
+              </template>
+            </el-popconfirm>
           </div>
         </div>
       </div>
@@ -64,6 +73,21 @@ const loadOrders = () => {
       if (Array.isArray(res.data)) orders.value = res.data
     })
     .catch(err => console.log(err))
+}
+
+const refundingId = ref(null)
+
+const refundOrder = (orderId) => {
+  refundingId.value = orderId
+  axios.post('/api/order/refund', { orderId })
+    .then(res => {
+      if (res.data.code === 200) {
+        ElMessage.success('退款成功！')
+        loadOrders()
+      } else ElMessage.warning(res.data.message)
+    })
+    .catch(err => console.log(err))
+    .finally(() => { refundingId.value = null })
 }
 
 const payOrder = (orderId) => {
